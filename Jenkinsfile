@@ -1,16 +1,12 @@
 pipeline {
-  agent {
-    kubernetes {
-      label 'nodejs-app-pod'
-      yamlFile 'nodejs-pod.yaml'
-    }
-  }
+  agent none
   options { 
     buildDiscarder(logRotator(numToKeepStr: '2'))
     skipDefaultCheckout true
   }
   stages {
     stage('Test') {
+      agent { label 'nodejs-app' }
       steps {
         checkout scm
         container('nodejs') {
@@ -33,11 +29,16 @@ pipeline {
         beforeAgent true
         branch 'master'
       }
+      options {
+        timeout(time: 60, unit: 'SECONDS') 
+      }
       input {
-        message "Should we continue?"
+        message "Should we deploy?"
+        submitter "beedemo-ops"
+        submitterParameter "APPROVER"
       }
       steps {
-        echo "Continuing with deployment"
+        echo "Continuing with deployment - approved by ${APPROVER}"
       }
     }
   }
